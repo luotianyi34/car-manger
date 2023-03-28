@@ -1,83 +1,108 @@
-const createError = require('http-errors');
 const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
-const logger = require('morgan');
+const router = express.Router();
+const connection = require("../util/db")
+const result = require("../util/json")
 
-/*引入session模块*/
-const session=require('express-session');
+router.get("/list", function (req, res) {
+    res.render("brand/brand-list");
+})
 
-const indexRouter = require('./routes/index');
-const departmentRouter = require('./routes/department');
-const brandRouter = require('./routes/brand');
-const userinfoRouter = require('./routes/userinfo');
-const uploadRouter = require('./routes/upload');
-const carRouter = require('./routes/car');
-
-const app = express();
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-
-/*配置session*/
-app.use(session({
-    secret: "keyboard cat",
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        maxAge: 1000 * 60 * 30
+router.get("/page", function (req, res) {
+    const {query} = req;
+    const params = [];
+    let sql = "select * from brand where 1 = 1 ";
+    if (query.brand_name) {
+        sql += "and brand_name = ? ";
+        params.push(query.brand_name);
     }
-}));
-app.all("/*", function (req, res, next) {
-    if (req.session.loginInfo) {
-        next();
-    } else {
-        const urlList = ["/", "/login"];
-        let isGo = false;
-        for (let i = 0; i < urlList.length; i++) {
-            if (urlList[i] === req.url) {
-                isGo = true
-                break;
-            }
+    if (query.status) {
+        sql += "and status = ? ";
+        params.push(query.status);
+    }
+    sql += " order by id desc limit ?,?";
+    params.push((query.page - 1) * query.limit);
+    params.push(parseInt(query.limit));
+    connection.query(sql, params, function (e, dList) {
+        if (e) throw e;
+        let countSql = "select count(*) count from brand where 1 = 1 ";
+        const countParams = [];
+        if (query.brand_name) {
+            countSql += "and brand_name = ? ";
+            countParams.push(query.brand_name);
         }
-        if (isGo) {
-            next();
-        } else {
-            res.redirect("/");//未登录且非白名单则自动重定向到登录页
+        if (query.status) {
+            countSql += "and status = ? ";
+            countParams.push(query.status);
         }
+        connection.query(countSql, countParams, function (e, r) {
+            if (e) throw e;
+            res.send(result.page(dList, r[0].count));
+        });
+    });
+})
 
+router.delete("/delete/:id", function (req, res) {
+    connection.query("delete from brand where id = ?", [req.params.id], function (e, r) {
+        if (e) throw e;
+        if (r.affectedRows === 1) {
+            res.send(result.ok());
+        } else {
+            res.send(result.error("删除失败"));
+        }
+    })
+});
+router.get("/edit", function (req, res) {
+    const {query} = req;
+    if (query.id) {
+        connection.query("select * from brand where id = ?", query.id, function (e, r) {
+            if (e) throw e;
+            res.render("brand/brand-edit", {brand: r[0]})
+        })
+    } else {
+        res.render("brand/brand-edit", {brand: {}})
     }
 })
 
-app.use('/', indexRouter);
-app.use('/department', departmentRouter);
-app.use('/brand', brandRouter);
-app.use('/userinfo', userinfoRouter);
-app.use('/upload', uploadRouter);
-app.use('/car', carRouter);
+router.post("/update", function (req, res) {
+    const {body} = req;
+    if (body.id) {
+        let sql = "update brand set brand_name = ?,profile = ?,status = ? where id = ?";
+        const params = [body.brand_name, body.profile, body.status, body.id];
+        connection.query(sql, params, function (e, r) {
+            if (e) throw e;
+            if (r.affectedRows === 1) {
+                res.send(result.ok());
+            } else {
+                res.send(result.error("修改失败"));
+            }
+        });
+    } else {
+        let sql = "insert into brand values(null,?,?,?)";
+        const params = [body.brand_name, body.profile, body.status];
+        connection.query(sql, params, function (e, r) {
+            if (e) throw e;
+            if (r.affectedRows === 1) {
+                res.send(result.ok());
+            } else {
+                res.send(result.error("添加失败"));
+            }
+        });
+    }
+})
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-    next(createError(404));
-});
+router.get("/select", function (req, res) {
+    const {query} = req;
+    let sql = "select * from brand ";
+    const params = [];
+    if (query.status) {
+        sql += "where status = ? ";
+        params.push(query.status)
+    }
+    sql += "order by id desc";
+    connection.query(sql, params, function (e, dList) {
+        if (e) throw e;
+        res.send(result.ok(dList));
+    });
+})
 
-// error handler
-app.use(function(err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
-});
-
-module.exports = app;
+module.exports = router;
