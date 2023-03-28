@@ -67,67 +67,70 @@
     <form id="edit" lay-filter="edit" class="layui-form">
         <input type="hidden" name="id" id="id" value="<%= car.id %>">
         <div class="layui-form-item">
-            <label class="layui-form-label" for="car_no"><span class="x-red">*</span>车牌</label>
+            <label class="layui-form-label" for="car_no"><span class="x-red">*</span>车牌号</label>
             <div class="layui-input-block">
                 <input type="text" name="car_no" id="car_no" placeholder="请输入车牌号" autocomplete="off"
                        value="<%= car.car_no %>" lay-verify="required" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label" for="color"><span class="x-red">*</span>颜色</label>
+            <label class="layui-form-label" for="color">颜色</label>
             <div class="layui-input-block">
-                <input type="text" name="color" id="color" placeholder="请输入车辆颜色" autocomplete="off"
-                       value="<%= car.color %>" lay-verify="required" class="layui-input">
+                <input type="text" name="color" id="color" placeholder="请输入颜色" autocomplete="off"
+                       value="<%= car.color %>" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label" for="brand_id">品牌编号</label>
-            <div class="layui-input-block">
-                <input type="text" name="brand_id" id="brand_id" placeholder="请输入品牌编号" autocomplete="off"
-                       value="<%= car.brand_id %>" class="layui-input">
-            </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label" for="frame_number">车架号</label>
+            <label class="layui-form-label" for="frame_number"><span class="x-red">*</span>车架号</label>
             <div class="layui-input-block">
                 <input type="text" name="frame_number" id="frame_number" placeholder="请输入车架号" autocomplete="off"
-                       value="<%= car.frame_number %>" class="layui-input">
+                       value="<%= car.frame_number %>" lay-verify="required" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label" for="driver_photo">行驶证</label>
-            <div class="layui-input-block">
-                <input type="hidden" name="driver_photo" id="driver_photo" value="<%= car.driver_photo %>" class="layui-input">
-                <button type="button" id="uploadAvatar" class="layui-btn">上传行驶证</button>
-                <div class="image-group">
-                    <div class="image-div" id="avatarImage">
-                        <div class="image">
-                            <img src="" alt="">
-                        </div>
-                        <div class="opt">
-                            <i class="iconfont delete">&#xe69d;</i>
-                            <i class="iconfont show">&#xe6ac;</i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="layui-form-item car_status">
             <label class="layui-form-label" for="car_status">车辆状态</label>
             <div class="layui-input-block">
                 <select name="car_status" id="car_status" lay-filter="car_status">
                     <option value="1">正常</option>
                     <option value="2">维修</option>
                     <option value="3">保养</option>
-                    <option value="4">使用</option>
+                    <option value="4">借用</option>
                 </select>
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label" for="mileage">行驶里程</label>
+            <label class="layui-form-label" for="brand_id">品牌</label>
             <div class="layui-input-block">
-                <input type="text" name="mileage" id="mileage" placeholder="请输入行驶里程" autocomplete="off"
+                <select name="brand_id" id="brand_id">
+
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" for="mileage"><span class="x-red">*</span>里程</label>
+            <div class="layui-input-block">
+                <input type="text" name="mileage" id="mileage" placeholder="请输入里程" autocomplete="off"
+                       lay-verify="required"
                        value="<%= car.mileage %>" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" for="driver_license"><span class="x-red">*</span>行驶证</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="driver_photo" id="driver_photo" value="<%= car.driver_photo %>"
+                       class="layui-input">
+                <button type="button" id="uploadLicense" class="layui-btn">上传行驶证</button>
+                <div class="image-group">
+                    <div class="image-div" id="licenseImage">
+                        <div class="image">
+                            <img src="" alt="">
+                        </div>
+                        <div class="opt">
+                            <i class="iconfont delete">&#xe69d;</i>
+                            <i class="iconfont show" type="licenseImage">&#xe6ac;</i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="layui-form-item">
@@ -159,20 +162,20 @@
         let status = "<%= car.status %>";
         let car_status = "<%= car.car_status %>";
 
-        /*状态值存在则表示修改*/
+        /*更新修改时下拉框的值*/
         if (status) {
             $("#status").val(status);
             $("#car_status").val(car_status);
             /*在layui中通过js更新select的值后，必须调用form.render去重新渲染*/
             form.render();
             $(".image-div").show();
-            let avatar = $("#driver_photo").val();
-            $("#avatarImage").find("img").prop("src", "upload/" + avatar);
-        }else {
+            let driver_photo = $("#driver_photo").val();
+            $("#licenseImage").find("img").prop("src", "upload/" + driver_photo);
+
+        } else {
             $(".image-div").hide();
         }
         $(".opt").hide();
-
 
         /*控制图片操作层*/
         $(".image-div").mouseenter(function () {
@@ -180,9 +183,9 @@
         }).mouseleave(function () {
             $(".opt").hide();
         });
+        /*绑定预览图片的事件*/
         $(".show").click(function () {
             let src = $(this).parents(".image-group").find("img").prop("src");
-            console.log(src)
             layer.open({
                 type: 1,
                 title: "图片预览",
@@ -199,23 +202,49 @@
             });
         });
 
-        /*渲染行驶证上传组件*/
+        /*渲染驾照上传组件*/
         upload.render({
-            elem: "#uploadAvatar",
+            elem: "#uploadLicense",
             url: "/upload",
             accept: "images",/*限制类型*/
             acceptMime: "images",/*限制选择框*/
             exts: "png|jpg|jpeg|gif",/*支持的后缀*/
             done(res) {
                 if (res.code === 200) {
-                    $("#avatarImage").show().find("img").prop("src", "upload/" + res.data);
+                    $("#licenseImage").show().find("img").prop("src", "upload/" + res.data);
                     $("#driver_photo").val(res.data)
                 } else {
                     layer.error("上传失败！");
                 }
             }
         });
+        /*获取品牌列表*/
+        $.ajax({
+            url: "brand/select",
+            method: "get",
+            dataType: "json",
+            success(res) {
+                if (res.code === 200) {
+                    const list = res.data;
+                    const brand = $("#brand_id");
+                    let $html = "";
+                    for (const d of list) {
+                        if (d.status === 2) {
+                            $html += '<option disabled value="' + d.id + '">' + d.brand_name + '</option>';
+                        } else {
+                            $html += '<option value="' + d.id + '">' + d.brand_name + '</option>';
+                        }
 
+                    }
+                    brand.append($html);
+                    let brand_id = "<%= car.brand_id %>";
+                    if (brand_id) {
+                        $("#brand_id").val(brand_id);
+                    }
+                    form.render();
+                }
+            }
+        });
         /*监听提交*/
         form.on("submit(submitBtn)", function ({field}) {
             let url = "";
@@ -224,7 +253,6 @@
             } else {
                 url = "car/save";
             }
-
             $.ajax({
                 url,
                 data: field,

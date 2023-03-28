@@ -9,35 +9,28 @@ router.get("/list", function (req, res) {
 
 router.get("/page", function (req, res) {
     const {query} = req;
+    let sql = "select c.*,b.brand_name bname from car c left join brand b on c.brand_id = b.id where 1 = 1 ";
     const params = [];
-    let sql = "select * from car where 1 = 1 ";
-    if(query.name){
-        sql += "and name = ? ";
-        params.push(query.name);
-    }
-    if(query.status){
-        sql+= "and status = ? ";
-        params.push(query.status);
-    }
-    sql+=" order by id desc limit ?,?";
+    sql = setSqlParams(query, sql, params);
+    sql += " order by c.id desc limit ?,?";
     params.push((query.page - 1) * query.limit);
     params.push(parseInt(query.limit));
-    connection.query(sql,params,function (e,carList) {
-        if(e) throw e;
-        let countSql = "select count(*) count from car where 1 = 1 ";
+    connection.query(sql, params, function (e, dataList) {
+        if (e) throw e;
+        let countSql = "select count(c.id) count from car c left join brand b on c.brand_id = b.id where 1 = 1 ";
         const countParams = [];
-        if(query.name){
-            countSql += "and name = ? ";
-            countParams.push(query.name);
-        }
-        if(query.status){
-            countSql+= "and status = ? ";
-            countParams.push(query.status);
-        }
-        connection.query(countSql,countParams,function (e,r){
-            if(e) throw e;
-            res.send(result.page(carList, r[0].count));
+        countSql = setSqlParams(query, countSql, countParams);
+        connection.query(countSql, countParams, function (e, r) {
+            if (e) throw e;
+            res.send(result.page(dataList, r[0].count));
         });
+    });
+})
+
+router.delete("/delete/:id", function (req, res) {
+    connection.query("delete from userinfo where id = ? ", [req.params.id], function (e, r) {
+        if (e) throw e;
+        res.send(r.affectedRows === 1 ? result.ok() : result.error("删除失败!"))
     });
 })
 
@@ -52,54 +45,12 @@ router.get("/edit", function (req, res) {
         res.render("car/car-edit", {car: {}})
     }
 })
-
-router.post("/update", function (req, res) {
-    const {body} = req;
-    let sql = "update car set car_no = ?, color = ?, brand_id = ?, frame_number = ?, driver_photo = ?,car_status = ?, mileage = ?, status = ? where id = ?";
-    const params = [body.car_no, body.color, body.brand_id,  body.frame_number, body.driver_photo, body.car_status,body.mileage, body.status, body.id];
-    connection.query(sql, params, function (e, r) {
-        if (e) throw e;
-        if (r.affectedRows === 1) {
-            res.json(result.ok());
-        } else {
-            res.json(result.error("修改失败"))
-        }
-    });
-})
-
-router.delete("/delete/:id", function (req, res) {
-    connection.query("delete from car where id = ?", [req.params.id], function (e, r) {
-        if (e) throw e;
-        if (r.affectedRows === 1) {
-            res.send(result.ok());
-        } else {
-            res.send(result.error("删除失败"));
-        }
-    })
-});
-
-router.get("/select", function (req, res) {
-    const {query} = req;
-    let sql = "select * from car";
-    const params = [];
-    if (query.status) {
-        sql += "where status = ? ";
-        params.push(query.status)
-    }
-    sql += "order by id desc";
-    connection.query(sql, params, function (e, carList) {
-        if (e) throw e;
-        res.send(result.ok(carList));
-    });
-})
-
-
 router.post("/save", function (req, res) {
     const {body} = req;
     connection.query("select * from car where car_no = ?", [body.car_no], function (e, r) {
         if (e) throw e;
         if (r.length > 0) {
-            res.json(result.error("该用户名已存在！"));
+            res.json(result.error("车牌号已存在！"));
         } else {
             let sql = "INSERT INTO car values (null,?,?,?,?,?,?,?,?)"
             const params = [body.car_no, body.color, body.brand_id, body.frame_number, body.driver_photo, body.car_status, body.mileage, body.status];
@@ -116,5 +67,46 @@ router.post("/save", function (req, res) {
     })
 })
 
+router.post("/update", function (req, res) {
+    const {body} = req;
+    let sql = "update car set car_no = ?, color = ?, brand_id = ?, frame_number = ?, driver_photo = ?,car_status = ?, mileage = ?, status = ? where id = ?";
+    const params = [body.car_no, body.color, body.brand_id, body.frame_number, body.driver_photo, body.car_status, body.mileage, body.status, body.id];
+    connection.query(sql, params, function (e, r) {
+        if (e) throw e;
+        if (r.affectedRows === 1) {
+            res.json(result.ok());
+        } else {
+            res.json(result.error("修改失败"))
+        }
+    });
+})
+
+function setSqlParams(query, sql, params) {
+    if (query.car_no) {
+        sql += " and c.car_no = ? ";
+        params.push(query.car_no);
+    }
+    if (query.color) {
+        sql += "and c.color like ? ";
+        params.push(`%${query.color}%`);
+    }
+    if (query.frame_number) {
+        sql += "and c.frame_number = ? ";
+        params.push(query.frame_number);
+    }
+    if (query.brand_id) {
+        sql += "and c.brand_id = ? ";
+        params.push(query.brand_id);
+    }
+    if (query.car_status) {
+        sql += "and c.car_status = ? ";
+        params.push(query.car_status);
+    }
+    if (query.status) {
+        sql += "and c.status = ? ";
+        params.push(query.status);
+    }
+    return sql;
+}
 
 module.exports = router;

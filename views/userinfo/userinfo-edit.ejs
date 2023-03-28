@@ -288,7 +288,6 @@
             }
         });
         /*获取部门列表*/
-        /*获取部门列表*/
         $.ajax({
             url: "department/select",
             method: "get",
@@ -299,7 +298,11 @@
                     const $dep = $("#department_id");
                     let $html = "";
                     for (const d of dList) {
-                        $html += '<option value="' + d.id + '">' + d.name + '</option>';
+                        if (d.status === 2) {
+                            $html += '<option disabled value="' + d.id + '">' + d.name + '</option>';
+                        } else {
+                            $html += '<option value="' + d.id + '">' + d.name + '</option>';
+                        }
                     }
                     $dep.append($html);
                     let department_id = "<%= userinfo.department_id %>";

@@ -22,10 +22,10 @@
   <form id="edit" lay-filter="edit" class="layui-form">
     <input type="hidden" name="id" id="id" value="<%= brand.id %>">
     <div class="layui-form-item">
-      <label class="layui-form-label" for="brand_name"><span class="x-red">*</span>品牌名称</label>
+      <label class="layui-form-label" for="name"><span class="x-red">*</span>品牌名称</label>
       <div class="layui-input-block">
-        <input type="text" name="brand_name" id="brand_name" placeholder="请输入品牌名" autocomplete="off"
-               value="<%= brand.name %>" lay-verify="required" class="layui-input">
+        <input type="text" name="brand_name" id="brand_name" placeholder="请输入品牌名称" autocomplete="off"
+               value="<%= brand.brand_name %>" lay-verify="required" class="layui-input">
       </div>
     </div>
     <div class="layui-form-item">

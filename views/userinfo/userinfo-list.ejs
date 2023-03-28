@@ -21,9 +21,9 @@
 <div class="x-nav">
           <span class="layui-breadcrumb">
             <a href="">用户管理</a>
-            <a href="">部门信息</a>
+            <a href="">用户信息</a>
             <a>
-              <cite>部门列表</cite></a>
+              <cite>用户列表</cite></a>
           </span>
     <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
        onclick="location.reload()" title="刷新">
@@ -171,11 +171,13 @@
                     layer.close(index);
                 })
             } else {
-                xadmin.open("修改部门", "userinfo/edit?id=" + id, 600, 600)
+                xadmin.open("修改用户", "userinfo/edit?id=" + id, 600, 600)
             }
         });
-        table.on("toolbar(dataList)", function () {
-            xadmin.open("添加部门", "userinfo/edit", 600, 600)
+        table.on("toolbar(dataList)", function (obj) {
+            if (obj.event === "add") {
+                xadmin.open("添加用户", "userinfo/edit", 600, 600)
+            }
         });
 
         form.on("submit(search)", function (data) {

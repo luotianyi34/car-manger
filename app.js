@@ -9,9 +9,9 @@ const session=require('express-session');
 
 const indexRouter = require('./routes/index');
 const departmentRouter = require('./routes/department');
+const brandRouter = require('./routes/brand');
 const userinfoRouter = require('./routes/userinfo');
 const uploadRouter = require('./routes/upload');
-const brandRouter = require('./routes/brand');
 const carRouter = require('./routes/car');
 
 const app = express();
@@ -59,11 +59,10 @@ app.all("/*", function (req, res, next) {
 
 app.use('/', indexRouter);
 app.use('/department', departmentRouter);
+app.use('/brand', brandRouter);
 app.use('/userinfo', userinfoRouter);
 app.use('/upload', uploadRouter);
-app.use('/brand',brandRouter);
-app.use('/car',carRouter);
-
+app.use('/car', carRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

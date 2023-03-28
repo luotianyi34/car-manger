@@ -85,7 +85,7 @@
                             <cite>车辆信息</cite></a>
                     </li>
                     <li>
-                        <a onclick="xadmin.add_tab('车辆信息','brand/list')">
+                        <a onclick="xadmin.add_tab('品牌信息','brand/list')">
                             <i class="iconfont">&#xe6a7;</i>
                             <cite>品牌信息</cite></a>
                     </li>
@@ -131,6 +131,17 @@
         const layer = layui.layer
         $("#logout").click(function () {
             layer.confirm("确定退出系统吗?", {icon: 3}, function (index) {
+                // $.ajax({
+                //     url:"logout",
+                //     method:"post",
+                //     dataType:"json",
+                //     success:res=>{
+                //         if(res.code === 200){
+                //             location.href="/"
+                //         }
+                //     }
+                // })
+
                 $.post("logout", () => {
                     location.replace("/")
                 })
