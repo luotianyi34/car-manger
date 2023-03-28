@@ -52,13 +52,36 @@ router.post("/save", function (req, res) {
         if (r.length > 0) {
             res.json(result.error("车牌号已存在！"));
         } else {
-            let sql = "INSERT INTO car values (null,?,?,?,?,?,?,?,?)"
+            let sql = "insert into car values (null,?,?,?,?,?,?,?,?)"
             const params = [body.car_no, body.color, body.brand_id, body.frame_number, body.driver_photo, body.car_status, body.mileage, body.status];
             connection.query(sql, params, function (e, r) {
                 if (e) throw e;
-                console.log(r)
                 if (r.affectedRows === 1) {
-                    res.json(result.ok());
+                    /*获取车辆的照片数组*/
+                    let carImage = body.car_image;
+                    if (carImage) {
+                        carImage = carImage.split(",");
+                        if (carImage.length > 0) {
+                            const car_id = r.insertId;
+                            let ciSql = "insert into car_image values";
+                            const ciParams = [];
+                            for (const ci of carImage) {
+                                ciSql += "(null,?,?),";
+                                ciParams.push(ci)
+                                ciParams.push(car_id);
+                            }
+                            ciSql = ciSql.substring(0, ciSql.length - 1);
+                            connection.query(ciSql, ciParams, function (e, r) {
+                                if (e) throw e;
+                                if (r.affectedRows === carImage.length) {
+                                    res.json(result.ok());
+                                } else {
+                                    res.json(result.error("图片保存异常"));
+                                }
+                            })
+                        }
+                    }
+
                 } else {
                     res.json(result.error("添加失败"))
                 }
@@ -79,6 +102,14 @@ router.post("/update", function (req, res) {
             res.json(result.error("修改失败"))
         }
     });
+})
+
+router.get('/image/:id', function (req, res) {
+    const id = req.params.id;
+    connection.query("select * from car_image where car_id = ?", id, function (e, r) {
+        if (e) throw e;
+        res.json(result.ok(r));
+    })
 })
 
 function setSqlParams(query, sql, params) {

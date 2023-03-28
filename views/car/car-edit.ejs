@@ -18,12 +18,18 @@
     <![endif]-->
 
     <style>
+        .image-list {
+            width: 400px;
+            min-height: 150px;
+        }
+
         .image-group {
-            height: 200px;
-            width: 200px;
-            margin-top: 10px;
+            height: 100px;
+            width: 100px;
+            margin: 10px 10px 10px 0;
             position: relative;
             border: 1px solid gray;
+            float: left;
         }
 
         .image-group .image-div {
@@ -120,16 +126,28 @@
                 <input type="hidden" name="driver_photo" id="driver_photo" value="<%= car.driver_photo %>"
                        class="layui-input">
                 <button type="button" id="uploadLicense" class="layui-btn">上传行驶证</button>
-                <div class="image-group">
-                    <div class="image-div" id="licenseImage">
-                        <div class="image">
-                            <img src="" alt="">
-                        </div>
-                        <div class="opt">
-                            <i class="iconfont delete">&#xe69d;</i>
-                            <i class="iconfont show" type="licenseImage">&#xe6ac;</i>
+                <div class="image-list">
+                    <div class="image-group">
+                        <div class="image-div" id="licenseImage">
+                            <div class="image">
+                                <img src="" alt="">
+                            </div>
+                            <div class="opt">
+                                <i class="iconfont delete">&#xe69d;</i>
+                                <i class="iconfont show" type="licenseImage">&#xe6ac;</i>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" for="car_image">车辆照片</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="car_image" id="car_image" value="<%= car.car_image %>"
+                       class="layui-input">
+                <button type="button" id="uploadCarImage" class="layui-btn">上传照片</button>
+                <div class="image-list" id="carImageListDiv">
                 </div>
             </div>
         </div>
@@ -153,35 +171,15 @@
 </div>
 </body>
 <script>
+    let car_image = [];
 
-
-    layui.use(["form", "upload"], function () {
-        const {form, upload} = layui;
-
-        /*获取状态值*/
-        let status = "<%= car.status %>";
-        let car_status = "<%= car.car_status %>";
-
-        /*更新修改时下拉框的值*/
-        if (status) {
-            $("#status").val(status);
-            $("#car_status").val(car_status);
-            /*在layui中通过js更新select的值后，必须调用form.render去重新渲染*/
-            form.render();
-            $(".image-div").show();
-            let driver_photo = $("#driver_photo").val();
-            $("#licenseImage").find("img").prop("src", "upload/" + driver_photo);
-
-        } else {
-            $(".image-div").hide();
-        }
+    function initImageStyle() {
         $(".opt").hide();
-
         /*控制图片操作层*/
         $(".image-div").mouseenter(function () {
-            $(".opt").show();
+            $(this).find(".opt").show();
         }).mouseleave(function () {
-            $(".opt").hide();
+            $(this).find(".opt").hide();
         });
         /*绑定预览图片的事件*/
         $(".show").click(function () {
@@ -202,6 +200,68 @@
             });
         });
 
+        $(".del").click(function () {
+            layer.confirm("确定删除该图片吗？", {icon: 3}, index => {
+                $(this).parents(".image-group").remove();
+                const fileName = $(this).parents(".image-group").find("img").prop("alt");
+                let imageIndex = -1;
+                for (let i = 0; i < car_image.length; i++) {
+                    if (fileName === car_image[i]) {
+                        imageIndex = i;
+                        break;
+                    }
+                }
+                car_image.splice(imageIndex, 1);
+                $("#car_image").val(car_image.toString());
+                layer.close(index);
+            });
+        })
+    }
+
+    function initImage() {
+        $html = '';
+        for (const ci of car_image) {
+            $html += '<div class="image-group"><div class="image-div" style="display: block"><div class="image"><img src="upload/' + ci + '" alt="' + ci + '"></div><div class="opt"><i class="iconfont del">&#xe69d;</i><i class="iconfont show" type="licenseImage">&#xe6ac;</i></div></div></div>'
+        }
+        $("#carImageListDiv").empty().append($html);
+        initImageStyle();
+        $("#car_image").val(car_image.toString());
+    }
+
+    layui.use(["form", "upload"], function () {
+        const {form, upload} = layui;
+
+        /*获取状态值*/
+        let status = "<%= car.status %>";
+        let car_status = "<%= car.car_status %>";
+
+        /*更新修改时下拉框的值*/
+        if (status) {
+            $("#status").val(status);
+            $("#car_status").val(car_status);
+            /*在layui中通过js更新select的值后，必须调用form.render去重新渲染*/
+            form.render();
+            $(".image-div").show();
+            let driver_photo = $("#driver_photo").val();
+            $("#licenseImage").find("img").prop("src", "upload/" + driver_photo);
+
+            /*修改时发送请求获取汽车的图片信息*/
+            $.ajax({
+                url: "car/image/<%= car.id %>",
+                method: "get",
+                success(res) {
+                    car_image = res.data.map(item => item.image)
+                    initImage()
+                }
+            })
+
+        } else {
+            $(".image-div").hide();
+        }
+
+        initImageStyle();
+
+
         /*渲染驾照上传组件*/
         upload.render({
             elem: "#uploadLicense",
@@ -215,6 +275,16 @@
                     $("#driver_photo").val(res.data)
                 } else {
                     layer.error("上传失败！");
+                }
+            }
+        });
+        upload.render({
+            elem: "#uploadCarImage",
+            url: "/upload",
+            done: res => {
+                if (res.code === 200) {
+                    car_image.push(res.data)
+                    initImage()
                 }
             }
         });

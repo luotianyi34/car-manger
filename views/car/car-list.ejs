@@ -182,7 +182,6 @@
                 xadmin.open("添加车辆", "car/edit", 600, 600)
             }
         });
-
         form.on("submit(search)", function (data) {
             table.reload("dataList", {
                 where: data.field,
@@ -192,8 +191,6 @@
             })
             return false;
         });
-
-
     });
 </script>
 </html>
