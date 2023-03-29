@@ -16,6 +16,14 @@
     <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
     <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <style>
+        .layui-table-cell {
+            height: 100px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
 <div class="x-nav">
@@ -91,6 +99,12 @@
     <button type="button" class="layui-btn layui-btn-sm layui-btn-danger">禁用</button>
     {{# } }}
 </script>
+<script type="text/html" id="avatarTemp">
+    <div id="avatar_{{d.id}}" style="height: 80px;width: 80px;border-radius: 50%;overflow: hidden;">
+        <img src="upload/{{d.avatar}}" layer-src="upload/{{d.avatar}}" alt=""
+             style="height: 100%;width: 100%;display: block">
+    </div>
+</script>
 <script type="text/html" id="optTemp">
     <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" lay-event="update">修改</button>
     <button type="button" class="layui-btn layui-btn-sm layui-btn-warm" lay-event="delete">删除</button>
@@ -144,13 +158,22 @@
                         }
                     }
                 },
+                {title: "头像", field: "avatar", templet: "#avatarTemp"},
                 {title: "部门状态", field: "status", templet: "#statusTemp"},
                 {title: "操作", fixed: "right", templet: "#optTemp"}
             ]],
             toolbar: "#toolbar",
             page: true,
             limit: 5,
-            limits: [5, 10, 20, 50, 100]
+            limits: [5, 10, 20, 50, 100],
+            done({data}) {
+                for (let user of data) {
+                    layer.photos({
+                        photos: "#avatar_" + user.id
+                    })
+                }
+
+            }
         });
         table.on("tool(dataList)", function (obj) {
             const {data: {id}, event} = obj;

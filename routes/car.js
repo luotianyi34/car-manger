@@ -97,7 +97,33 @@ router.post("/update", function (req, res) {
     connection.query(sql, params, function (e, r) {
         if (e) throw e;
         if (r.affectedRows === 1) {
-            res.json(result.ok());
+            connection.query("delete from car_image where car_id = ?", body.id, function (e, r) {
+                if (e) throw e;
+                /*获取车辆的照片数组*/
+                let carImage = body.car_image;
+                if (carImage) {
+                    carImage = carImage.split(",");
+                    if (carImage.length > 0) {
+                        const car_id = body.id;
+                        let ciSql = "insert into car_image values";
+                        const ciParams = [];
+                        for (const ci of carImage) {
+                            ciSql += "(null,?,?),";
+                            ciParams.push(ci)
+                            ciParams.push(car_id);
+                        }
+                        ciSql = ciSql.substring(0, ciSql.length - 1);
+                        connection.query(ciSql, ciParams, function (e, r) {
+                            if (e) throw e;
+                            if (r.affectedRows === carImage.length) {
+                                res.json(result.ok());
+                            } else {
+                                res.json(result.error("图片保存异常"));
+                            }
+                        })
+                    }
+                }
+            });
         } else {
             res.json(result.error("修改失败"))
         }
