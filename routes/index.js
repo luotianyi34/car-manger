@@ -24,7 +24,7 @@ router.post("/login",function (req, res) {
       const user = r[0];
       if(user.status === 1){
         req.session.loginInfo = user;
-        res.json(result.ok());
+        res.json(result.ok(user));
       } else {
         res.json(result.error("该用户已被封禁"));
       }

@@ -4,14 +4,15 @@ const connection = require("../util/db")
 const result = require("../util/json")
 
 router.get("/list", function (req, res) {
-    res.render("userinfo/userinfo-list");
+    res.render("userinfo/userinfo-list", {loginInfo: req.session.loginInfo});
 })
 
 router.get("/page", function (req, res) {
     const {query} = req;
+    const {loginInfo} = req.session;
     let sql = "select u.*,d.name dname from userinfo u left join department d on u.department_id = d.id where 1 = 1 ";
     const params = [];
-    sql = setSqlParams(query, sql, params);
+    sql = setSqlParams(query, sql, params, loginInfo);
     sql += " order by u.id desc limit ?,?";
     params.push((query.page - 1) * query.limit);
     params.push(parseInt(query.limit));
@@ -19,7 +20,7 @@ router.get("/page", function (req, res) {
         if (e) throw e;
         let countSql = "select count(u.id) count from userinfo u left join department d on u.department_id = d.id where 1 = 1 ";
         const countParams = [];
-        countSql = setSqlParams(query, countSql, countParams);
+        countSql = setSqlParams(query, countSql, countParams, loginInfo);
         connection.query(countSql, countParams, function (e, r) {
             if (e) throw e;
             res.send(result.page(userList, r[0].count));
@@ -46,10 +47,10 @@ router.get("/edit", function (req, res) {
     if (query.id) {
         connection.query("select * from userinfo where id = ?", [query.id], function (e, r) {
             if (e) throw e;
-            res.render("userinfo/userinfo-edit", {userinfo: r[0]})
+            res.render("userinfo/userinfo-edit", {userinfo: r[0], loginInfo: req.session.loginInfo})
         });
     } else {
-        res.render("userinfo/userinfo-edit", {userinfo: {}})
+        res.render("userinfo/userinfo-edit", {userinfo: {}, loginInfo: req.session.loginInfo})
     }
 })
 router.post("/save", function (req, res) {
@@ -59,8 +60,8 @@ router.post("/save", function (req, res) {
         if (r.length > 0) {
             res.json(result.error("该用户名已存在！"));
         } else {
-            let sql = "INSERT INTO userinfo values (null,?,'666888',?,?,?,?,?,?,?,?)"
-            const params = [body.username, body.nickname, body.phone, body.department_id, body.power, body.status, body.avatar, body.driver_license, body.driver_age ? body.driver_age : null];
+            let sql = "INSERT INTO userinfo values (null,?,'666888',?,?,?,?,?,?,?,?,?,?)"
+            const params = [body.username, body.nickname, body.phone, body.department_id, body.power, body.status, body.avatar, body.driver_license, body.driver_age ? body.driver_age : null, req.session.loginInfo.id, new Date()];
             connection.query(sql, params, function (e, r) {
                 if (e) throw e;
                 console.log(r)
@@ -111,7 +112,14 @@ router.post('/pwd', function (req, res) {
     });
 })
 
-function setSqlParams(query, sql, params) {
+router.get('/driver/select', function (req, res) {
+    connection.query("select * from userinfo where power = 4 order by id desc", function (e, r) {
+        if (e) throw e;
+        res.json(result.ok(r))
+    })
+})
+
+function setSqlParams(query, sql, params, loginInfo) {
     if (query.username) {
         sql += " and u.username = ? ";
         params.push(query.username);
@@ -124,9 +132,14 @@ function setSqlParams(query, sql, params) {
         sql += "and u.phone = ? ";
         params.push(query.phone);
     }
-    if (query.department_id) {
+    if (loginInfo.power === 2) {
         sql += "and u.department_id = ? ";
-        params.push(query.department_id);
+        params.push(loginInfo.department_id);
+    } else {
+        if (query.department_id) {
+            sql += "and u.department_id = ? ";
+            params.push(query.department_id);
+        }
     }
     if (query.power) {
         sql += "and u.power = ? ";

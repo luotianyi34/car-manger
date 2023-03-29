@@ -13,6 +13,7 @@ const brandRouter = require('./routes/brand');
 const userinfoRouter = require('./routes/userinfo');
 const uploadRouter = require('./routes/upload');
 const carRouter = require('./routes/car');
+const recordRouter = require('./routes/record');
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use('/brand', brandRouter);
 app.use('/userinfo', userinfoRouter);
 app.use('/upload', uploadRouter);
 app.use('/car', carRouter);
+app.use('/record', recordRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

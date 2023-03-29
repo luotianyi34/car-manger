@@ -138,6 +138,13 @@ router.get('/image/:id', function (req, res) {
     })
 })
 
+router.get('/select', function (req, res) {
+    connection.query("select * from car order by id desc", function (e, r) {
+        if (e) throw e;
+        res.json(result.ok(r))
+    });
+})
+
 function setSqlParams(query, sql, params) {
     if (query.car_no) {
         sql += " and c.car_no = ? ";

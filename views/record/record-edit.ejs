@@ -16,22 +16,14 @@
     <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
     <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
-    <style>
-        .layui-table-cell {
-            height: 100px !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
 </head>
 <body>
 <div class="x-nav">
           <span class="layui-breadcrumb">
-            <a href="">用户管理</a>
-            <a href="">用户信息</a>
+            <a href="">养护信息</a>
+            <a href="">保养/维修</a>
             <a>
-              <cite>用户列表</cite></a>
+              <cite>添加信息</cite></a>
           </span>
     <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
        onclick="location.reload()" title="刷新">
@@ -44,33 +36,13 @@
                 <div class="layui-card-body ">
                     <form class="layui-form layui-col-space5">
                         <div class="layui-inline layui-show-xs-block">
-                            <input type="text" name="username" placeholder="用户名" autocomplete="off"
-                                   class="layui-input">
+                            <select name="record_id" id="record_id">
+                                <option value="">[选择司机]</option>
+                            </select>
                         </div>
                         <div class="layui-inline layui-show-xs-block">
-                            <input type="text" name="nickname" placeholder="昵称" autocomplete="off"
-                                   class="layui-input">
-                        </div>
-                        <div class="layui-inline layui-show-xs-block">
-                            <input type="text" name="phone" placeholder="手机号" autocomplete="off" class="layui-input">
-                        </div>
-                        <% if(loginInfo.power == 1){ %>
-                            <div class="layui-inline layui-show-xs-block">
-                                <select lay-search name="department_id" id="department_id">
-                                    <option value="">[选择部门]</option>
-                                </select>
-                            </div>
-                        <% } %>
-                        <div class="layui-inline layui-show-xs-block">
-                            <select name="power" id="power">
-                                <option value="">[选择权限]</option>
-                                <% if(loginInfo.power == 1){ %>
-                                    <option value="1">管理员</option>
-                                    <option value="4">司机</option>
-                                <% } %>
-                                <option value="2">负责人</option>
-                                <option value="3">员工</option>
-
+                            <select name="car_id" id="car_id">
+                                <option value="">[选择车牌]</option>
                             </select>
                         </div>
                         <div class="layui-inline layui-show-xs-block">
@@ -79,6 +51,17 @@
                                 <option value="1">可用</option>
                                 <option value="2">禁用</option>
                             </select>
+                        </div>
+                        <div class="layui-inline layui-show-xs-block">
+                            <select name="record_type" id="record_type">
+                                <option value="">[选择类型]</option>
+                                <option value="1">保养</option>
+                                <option value="2">维修</option>
+                            </select>
+                        </div>
+                        <div class="layui-inline layui-show-xs-block">
+                            <input type="text" id="record_time" placeholder="请选择日期" name="record_time" readonly
+                                   class="layui-input">
                         </div>
                         <div class="layui-inline layui-show-xs-block">
                             <button class="layui-btn" lay-submit="" lay-filter="search"><i
@@ -94,9 +77,6 @@
     </div>
 </div>
 </body>
-<script type="text/html" id="toolbar">
-    <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" lay-event="add">添加</button>
-</script>
 <script type="text/html" id="statusTemp">
     {{# if(d.status === 1){ }}
     <button type="button" class="layui-btn layui-btn-sm">可用</button>
@@ -104,88 +84,83 @@
     <button type="button" class="layui-btn layui-btn-sm layui-btn-danger">禁用</button>
     {{# } }}
 </script>
-<script type="text/html" id="avatarTemp">
-    <div id="avatar_{{d.id}}" style="height: 80px;width: 80px;border-radius: 50%;overflow: hidden;">
-        <img src="upload/{{d.avatar}}" layer-src="upload/{{d.avatar}}" alt=""
-             style="height: 100%;width: 100%;display: block">
-    </div>
-</script>
 <script type="text/html" id="optTemp">
     <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" lay-event="update">修改</button>
     <button type="button" class="layui-btn layui-btn-sm layui-btn-warm" lay-event="delete">删除</button>
 </script>
 <script>
-
     var table;
-    layui.use(['table', 'form'], function () {
+    layui.use(['table', 'form', 'laydate'], function () {
         table = layui.table;
         const form = layui.form;
-        /*获取部门列表*/
+        const laydate = layui.laydate;
+        laydate.render({
+            elem: "#record_time",
+            range: true
+        })
+
         $.ajax({
-            url: "department/select",
+            url: "car/select",
             method: "get",
-            dataType: "json",
             success(res) {
                 if (res.code === 200) {
-                    const dList = res.data;
-                    const $firstOption = $("#department_id option:first");
                     let $html = "";
-                    for (const d of dList) {
-                        $html += '<option value="' + d.id + '">' + d.name + '</option>';
+                    for (const car of res.data) {
+                        $html += '<option value="' + car.id + '">' + car.car_no + '</option>';
                     }
-                    $firstOption.after($html);
-                    form.render();
+                    $("#car_id option:first").after($html);
+                    form.render()
                 }
             }
-        });
+        })
+
+        $.ajax({
+            url: "userinfo/driver/select",
+            method: "get",
+            success(res) {
+                if (res.code === 200) {
+                    let $html = "";
+                    for (const user of res.data) {
+                        $html += '<option value="' + user.id + '">' + user.nickname + '</option>';
+                    }
+                    $("#record_id option:first").after($html);
+                    form.render()
+                }
+            }
+        })
+
         table.render({
             elem: "#dataList",
-            url: "userinfo/page",
+            url: "record/page",
             cols: [[
                 {title: "编号", field: "id"},
-                {title: "用户名", field: "username"},
-                {title: "昵称", field: "nickname"},
-                {title: "联系方式", field: "phone"},
-                {title: "所在部门", field: "dname"},
+                {title: "记录人", field: "uname"},
+                {title: "车牌", field: "car_no"},
+                {title: "记录时间", field: "record_time"},
+                {title: "费用(￥)", field: "record_money"},
                 {
-                    title: "权限", field: "power", templet: function (d) {
-                        switch (d.power) {
-                            case 1:
-                                return "管理员";
-                            case 2:
-                                return "负责人";
-                            case 3:
-                                return "员工";
-                            case 4:
-                                return "司机";
-                            default:
-                                return "权限异常";
+                    title: "类型", field: "record_type", templet: function (d) {
+                        if (d.record_type === 1) {
+                            return '保养';
+                        } else {
+                            return "维修";
                         }
                     }
                 },
-                {title: "头像", field: "avatar", templet: "#avatarTemp"},
-                {title: "部门状态", field: "status", templet: "#statusTemp"},
+                {title: "状态", field: "status", templet: "#statusTemp"},
                 {title: "操作", fixed: "right", templet: "#optTemp"}
             ]],
-            toolbar: "#toolbar",
+            toolbar: true,
             page: true,
             limit: 5,
-            limits: [5, 10, 20, 50, 100],
-            done({data}) {
-                for (let user of data) {
-                    layer.photos({
-                        photos: "#avatar_" + user.id
-                    })
-                }
-
-            }
+            limits: [5, 10, 20, 50, 100]
         });
         table.on("tool(dataList)", function (obj) {
             const {data: {id}, event} = obj;
             if (event === "delete") {
                 layer.confirm("确定删除编号[" + id + "]的数据吗?", {icon: 3}, function (index) {
                     $.ajax({
-                        url: "userinfo/delete/" + id,
+                        url: "record/delete/" + id,
                         method: "delete",
                         success(res) {
                             if (res.code === 200) {
@@ -199,12 +174,7 @@
                     layer.close(index);
                 })
             } else {
-                xadmin.open("修改用户", "userinfo/edit?id=" + id, 600, 600)
-            }
-        });
-        table.on("toolbar(dataList)", function (obj) {
-            if (obj.event === "add") {
-                xadmin.open("添加用户", "userinfo/edit", 600, 600)
+                xadmin.add_tab('修改记录', 'record/edit?id=' + id);
             }
         });
 
@@ -217,8 +187,6 @@
             })
             return false;
         });
-
-
     });
 </script>
 </html>

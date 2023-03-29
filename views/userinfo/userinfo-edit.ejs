@@ -87,24 +87,26 @@
                        value="<%= userinfo.phone %>" class="layui-input">
             </div>
         </div>
-        <div class="layui-form-item power">
-            <label class="layui-form-label" for="power">权限</label>
-            <div class="layui-input-block">
-                <select name="power" id="power" lay-filter="power">
-                    <option value="2">负责人</option>
-                    <option value="3">员工</option>
-                    <option value="4">司机</option>
-                </select>
+        <% if(loginInfo.power == 1){ %>
+            <div class="layui-form-item power">
+                <label class="layui-form-label" for="power">权限</label>
+                <div class="layui-input-block">
+                    <select name="power" id="power" lay-filter="power">
+                        <option value="2">负责人</option>
+                        <option value="3">员工</option>
+                        <option value="4">司机</option>
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="layui-form-item dep">
-            <label class="layui-form-label" for="department_id">部门</label>
-            <div class="layui-input-block">
-                <select name="department_id" id="department_id">
+            <div class="layui-form-item dep">
+                <label class="layui-form-label" for="department_id">部门</label>
+                <div class="layui-input-block">
+                    <select name="department_id" id="department_id">
 
-                </select>
+                    </select>
+                </div>
             </div>
-        </div>
+        <% } %>
         <div class="layui-form-item driver">
             <label class="layui-form-label" for="driver_age"><span class="x-red">*</span>驾龄</label>
             <div class="layui-input-block">
@@ -149,15 +151,17 @@
                 </div>
             </div>
         </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label" for="status">状态</label>
-            <div class="layui-input-block">
-                <select name="status" id="status">
-                    <option value="1">可用</option>
-                    <option value="2">禁用</option>
-                </select>
+        <% if(loginInfo.id != userinfo.id){ %>
+            <div class="layui-form-item">
+                <label class="layui-form-label" for="status">状态</label>
+                <div class="layui-input-block">
+                    <select name="status" id="status">
+                        <option value="1">可用</option>
+                        <option value="2">禁用</option>
+                    </select>
+                </div>
             </div>
-        </div>
+        <% } %>
         <div class="layui-form-item">
             <label class="layui-form-label"></label>
             <div class="layui-input-block">
@@ -325,6 +329,10 @@
                 /*非司机权限时清除驾照和驾龄*/
                 field.driver_license = null
                 field.driver_age = null
+            }
+            if ("<%= loginInfo.power %>" === "2") {
+                field.department_id = "<%= loginInfo.department_id %>";
+                field.power = 3;
             }
 
             $.ajax({

@@ -38,18 +38,19 @@
     $(function () {
         layui.use('form', function () {
             var form = layui.form;
-            form.on('submit(login)', function(data){
+            form.on('submit(login)', function (data) {
                 $.ajax({
-                    url:"login",
-                    data:data.field,
-                    method:"post",
-                    dataType:"json",
-                    success(res){
-                        if(res.code === 200){
-                            layer.msg("登录成功",{icon: 6})
+                    url: "login",
+                    data: data.field,
+                    method: "post",
+                    dataType: "json",
+                    success(res) {
+                        if (res.code === 200) {
+                            sessionStorage.setItem("loginInfo", JSON.stringify(res.data))
+                            layer.msg("登录成功", {icon: 6})
                             location.replace("home")
-                        }else{
-                            layer.msg(res.msg,{icon:5})
+                        } else {
+                            layer.msg(res.msg, {icon: 5})
                         }
                     }
                 })

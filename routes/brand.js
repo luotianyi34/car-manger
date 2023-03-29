@@ -42,14 +42,23 @@ router.get("/page", function (req, res) {
 })
 
 router.delete("/delete/:id", function (req, res) {
-    connection.query("delete from brand where id = ?", [req.params.id], function (e, r) {
+    connection.query("select * from car where brand_id = ?", req.params.id, function (e, r) {
         if (e) throw e;
-        if (r.affectedRows === 1) {
-            res.send(result.ok());
+        if (r.length > 0) {
+            res.json(result.error("该品牌已被使用，禁止删除"))
         } else {
-            res.send(result.error("删除失败"));
+            connection.query("delete from brand where id = ?", [req.params.id], function (e, r) {
+                if (e) throw e;
+                if (r.affectedRows === 1) {
+                    res.send(result.ok());
+                } else {
+                    res.send(result.error("删除失败"));
+                }
+            })
         }
     })
+
+
 });
 router.get("/edit", function (req, res) {
     const {query} = req;

@@ -42,16 +42,22 @@ router.get("/page",function (req, res) {
 })
 
 router.delete("/delete/:id", function (req, res) {
-    connection.query("delete from department where id = ?", [req.params.id], function (e, r) {
+    connection.query("select * from userinfo where department_id = ?", req.params.id, function (e, r) {
         if (e) throw e;
-        if (r.affectedRows === 1) {
-            res.send(result.ok());
+        if (r.length > 0) {
+            res.json(result.error("该部门已被使用，禁止删除！"));
         } else {
-            res.send(result.error("删除失败"));
+            connection.query("delete from department where id = ?", [req.params.id], function (e, r) {
+                if (e) throw e;
+                if (r.affectedRows === 1) {
+                    res.json(result.ok());
+                } else {
+                    res.json(result.error("删除失败"));
+                }
+            })
         }
     })
 });
-
 router.get("/edit", function (req, res) {
     const {query} = req;
     if (query.id) {
